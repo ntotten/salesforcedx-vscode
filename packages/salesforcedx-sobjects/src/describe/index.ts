@@ -7,3 +7,6 @@
 
 export { SObjectDescribe } from './sObjectDescribe';
 export { SObjectDescribeGlobal } from './sObjectDescribeGlobal';
+export { SObject } from './sObjectDescribe';
+export { ChildRelationship } from './sObjectDescribe';
+export { Field } from './sObjectDescribe';
