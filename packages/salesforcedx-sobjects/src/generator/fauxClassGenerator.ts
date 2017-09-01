@@ -57,8 +57,14 @@ export class FauxClassGenerator {
     if (rel.relationshipName) {
       return 'List<' + rel.childSObject + '> ' + rel.relationshipName;
     } else {
-      // TBD ignore ? or use "field" and strip Id off end ?
-      return '';
+      // expect the name to end with Id, then strip off Id
+      if (rel.field.endsWith('Id')) {
+        return (
+          rel.childSObject + ' ' + rel.field.slice(0, rel.field.length - 2)
+        );
+      } else {
+        return '';
+      }
     }
   }
 
@@ -97,13 +103,37 @@ export class FauxClassGenerator {
   //VisibleForTesting
   public generateFauxClassText(sobject: SObject): string {
     let declarations: string[] = [];
-    for (let rel of sobject.childRelationships) {
-      declarations.push(this.generateChildRelationship(rel));
-    }
-    for (let field of sobject.fields) {
-      declarations.push(this.generateField(field));
+    if (sobject.fields) {
+      for (let field of sobject.fields) {
+        const decl: string = this.generateField(field);
+        if (decl) {
+          declarations.push(decl);
+        }
+      }
     }
 
+    if (sobject.childRelationships) {
+      for (let rel of sobject.childRelationships) {
+        if (rel.relationshipName) {
+          const decl: string = this.generateChildRelationship(rel);
+          if (decl) {
+            declarations.push(decl);
+          }
+        }
+      }
+      for (let rel of sobject.childRelationships) {
+        // handle the odd childRelationships last (without relationshipName)
+        if (!rel.relationshipName) {
+          const decl: string = this.generateChildRelationship(rel);
+          if (decl) {
+            declarations.push(decl);
+          }
+        }
+      }
+    }
+
+    // sort, but filter out duplicates
+    // which can happen due to childRelationships w/o a relationshipName
     declarations.sort(function nameCompare(
       first: string,
       second: string
@@ -112,6 +142,18 @@ export class FauxClassGenerator {
       FauxClassGenerator.fieldName(second)
         ? 1
         : -1;
+    });
+
+    declarations = declarations.filter(function checkDups(
+      value: string,
+      index: number,
+      array: string[]
+    ) {
+      return (
+        !index ||
+        FauxClassGenerator.fieldName(value) !=
+          FauxClassGenerator.fieldName(array[index - 1])
+      );
     });
 
     const indentAndModifier = '    global ';
