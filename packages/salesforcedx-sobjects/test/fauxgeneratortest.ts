@@ -46,7 +46,7 @@ describe('generate relationship tests', function() {
     const field1: string =
       '{"name": "Foo", "type": "string", "referenceTo": []}';
     const relation1: string =
-      '{"referenceTo": ["Account"], "relationshipName": "Account__r"}';
+      '{"name": "Account__c", "referenceTo": ["Account"], "relationshipName": "Account__r"}';
     const sobject1: string =
       '{ "name": "Custom__c", "fields": [ ' +
       field1 +
@@ -63,6 +63,7 @@ describe('generate relationship tests', function() {
     const classText = fs.readFileSync(classPath, 'utf8');
     expect(classText).to.include('String Foo;');
     expect(classText).to.include('Account Account__r');
+    expect(classText).to.include('Id Account__c');
   });
 
   it('generated faux class should create file with child relationship', async function(): Promise<

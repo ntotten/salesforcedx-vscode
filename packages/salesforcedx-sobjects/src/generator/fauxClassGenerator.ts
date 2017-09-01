@@ -68,17 +68,21 @@ export class FauxClassGenerator {
     }
   }
 
-  private generateField(field: Field): string {
+  private generateField(field: Field): string[] {
+    let decls: string[] = [];
     if (field.referenceTo.length == 0) {
-      return (
+      decls.push(
         field.type.charAt(0).toUpperCase() +
-        field.type.slice(1) +
-        ' ' +
-        field.name
+          field.type.slice(1) +
+          ' ' +
+          field.name
       );
     } else {
-      return field.referenceTo + ' ' + field.relationshipName;
+      decls.push(field.referenceTo + ' ' + field.relationshipName);
+      // field.type will be "reference", but the actual type is an Id for Apex
+      decls.push('Id ' + field.name);
     }
+    return decls;
   }
 
   private static fieldName(decl: string) {
@@ -105,9 +109,11 @@ export class FauxClassGenerator {
     let declarations: string[] = [];
     if (sobject.fields) {
       for (let field of sobject.fields) {
-        const decl: string = this.generateField(field);
-        if (decl) {
-          declarations.push(decl);
+        const decls: string[] = this.generateField(field);
+        if (decls && decls.length > 0) {
+          for (let decl of decls) {
+            declarations.push(decl);
+          }
         }
       }
     }
